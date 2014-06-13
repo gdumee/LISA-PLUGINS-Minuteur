@@ -12,5 +12,37 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #: ../../modules/minuteur.py
-msgid "Hello. How are you ?"
-msgstr "Hello. How are you ?"
+msgid "You didn't specify a duration"
+msgstr "Vous n'avez pas indiqué de durée"
+
+#: ../../modules/minuteur.py
+msgid "I start a timer for %s"
+msgstr "je lance un minuteur de %s"
+
+#: ../../modules/minuteur.py
+msgid "for"
+msgstr "pour"
+
+#: ../../modules/minuteur.py
+msgid "There is %s left"
+msgstr "Il reste %s"
+
+#: ../../modules/minuteur.py
+msgid "I don't know this timer"
+msgstr "Je ne connais pas ce minuteur"
+
+#: ../../modules/minuteur.py
+msgid "The timer %s is over"
+msgstr "Le minuteur %s est terminé"
+
+#: ../../modules/minuteur.py
+msgid "hour"
+msgstr "heure"
+
+#: ../../modules/minuteur.py
+msgid "minute"
+msgstr "minute"
+
+#: ../../modules/minuteur.py
+msgid "second"
+msgstr "seconde"

@@ -36,212 +36,176 @@ from Notification import NotifyClient
 # Tests
 if __name__ == "__main__" :
     jsonInput2 = {'from': u'Lisa-Web', 'zone': u'WebSocket',u'msg_id': u'd31f4acd-9ed0-4248-9344-b2b29b95982c',
-        u'msg_body': u'compte \xe0 rebours 20 secondes pour le poisson', 
+        u'msg_body': u'compte \xe0 rebours 20 secondes pour le poisson',
         u'outcome': {u'entities': {
-        u'duration': {u'body': u'20 secondes', u'start': 17, u'end': 28, u'value': 6}, 
+        u'duration': {u'body': u'20 secondes', u'start': 17, u'end': 28, u'value': 6},
         u'message_subject': {u'body': u'pour le poisson', u'start': 29, u'end': 44, u'suggested': True, u'value': u'le poisson'}
-        },u'confidence': 0.7, 
+        },u'confidence': 0.7,
         u'intent': u'minuteur_rebours'}, 'type': u'chat'}
-        
+
     jsonInput2Durations = {'from': u'Lisa-Web', 'zone': u'WebSocket',u'msg_id': u'd31f4acd-9ed0-4248-9344-b2b29b95982c',
-        u'msg_body': u'compte \xe0 rebours 20 secondes pour le poisson', 
+        u'msg_body': u'compte \xe0 rebours 20 secondes pour le poisson',
         u'outcome': {u'entities': {
         u'duration': [{u'body': u'une heure', u'start': 9, u'end': 20, u'value': 3600},{u'body': u'une minutes', u'start': 9, u'end': 20, u'value': 60}, {u'body': u'25 secondes', u'start': 24, u'end': 35, u'value': 25}],
         u'message_subject': {u'body': u'le repas', u'start': 41, u'end': 49, u'suggested': True, u'value': u'le repas'}
-        }, u'confidence': 0.91, 
+        }, u'confidence': 0.91,
         u'intent': u'minuteur_rebours'}, 'type': u'chat'}
-    
+
     jsonInputGetMinuteur = {'from': u'Lisa-Web', 'zone': u'WebSocket',u'msg_id': u'd31f4acd-9ed0-4248-9344-b2b29b95982c',
-        u'msg_body': u'combien de temps reste-t-il pour le lapin', 
+        u'msg_body': u'combien de temps reste-t-il pour le lapin',
         u'outcome': {u'entities': {
         u'message_subject': {u'body': u'le lapin', u'start': 33, u'end': 41, u'suggested': True, u'value': u'le poisson'}
         }, u'confidence': 0.949, u'intent': u'minuteur_tempsrestant'}, 'type': u'chat'}
-    
+
     class IPlugin():
         def __init__(self):
             pass
 
-# Main class
 class Minuteur(IPlugin):
-    dicTimer={}  #variable de class
-    
+    """
+    Plugin main class
+    """
+
     def __init__(self):
-        if __name__ <> "__main__" :   #suppression pour le debug
+        # When testing
+        self.path = os.path.realpath(os.path.abspath(os.path.join(os.path.split(inspect.getfile(inspect.currentframe()))[0],os.path.normpath("../lang/"))))
+        if __name__ <> "__main__" :
             super(Minuteur, self).__init__()
             self.configuration_plugin = self.mongo.lisa.plugins.find_one({"name": "Minuteur"})
-            self.path = os.path.realpath(os.path.abspath(os.path.join(os.path.split(
-                inspect.getfile(inspect.currentframe()))[0],os.path.normpath("../lang/"))))
-            #self._ = translation = gettext.translation(domain='Minuteur',
-            #                                          localedir=self.path,
-            #                                       fallback=True,
-            #                                           languages=[self.configuration_lisa['lang']]).ugettext
+            self._ = translation = gettext.translation(domain = 'Minuteur', localedir = self.path, fallback = True, languages = [self.configuration_lisa['lang']]).ugettext
+        else:
+            self._ = lambda x: x
+            self._ = translation = gettext.translation(domain = 'Minuteur', localedir = self.path, fallback = True, languages = ['fr-FR']).ugettext
+        self.Timers = []
 
     def setMinuteur(self, jsonInput):
         """
-        configure le compte à rebours
-        renvoit la notification à l'utilisateur 
-        lance le compte a rebours dans un thread
-        avertit l'utilisateur de la fin du minuteur
+        Set a new timer
         """
-        #print ("\n \n \n json d'entree = ", jsonInput,"\n \n \n ")   # pour debug
-        
-        #init
-        sZone=""  #zone de retour pour la notification utilisateurs
-        sObjet="" #le pourquoi du minuteur : ex : poulet
-        Duree_s=0 #en seconde, renvoye par Wit
-        sDuration=""
-        
-        #extraction des infos
-        try :
-            sDuration = jsonInput['outcome']['entities']['duration']
-            #print sDuration
-            if type(sDuration) is list  :
-                for element in sDuration :
-                    #print element
-                    Duree_s += int(element['value'])
-            elif type(sDuration) is dict :
-                Duree_s =sDuration['value']
-            else :
-                return {"plugin": "Minuteur",  #Fatal
-                    "method": "setRebours",
-                    "body": ("Type de structure inconnues")
-                    }
-            #print Duree_s
-        except :                           #Fatal
-            return {"plugin": "Minuteur",
-                    "method": "setRebours",
-                    "body": ("Il manque la durée du minuteur")
-                    }
-        sZone = jsonInput['zone']
-        try :
-            sObjet = str(jsonInput['outcome']['entities']['message_subject']['value'])
-            sObjet= ' '.join(sObjet.split()) #suppression espace en trop
-            if "pour" not in sObjet :
-                sObjet = "pour " + sObjet #des fois il manque le pour dans l'objet, Wit ne le renvoit pas
-                #print sObjet
-        except :                            #non bloquant
-            sObjet = "timer-sans-objet"
-        
-        #lancement minuteur
-        self.monMinuteur(Duree_s,sObjet,sZone)
-        
-        #construction du message de retour utilisateur
-        sMessage = "je compte a rebours "
-        #conversion secondes vers minutes, heures pour l'utilisateurs
-        #print self.ConvertirDuree(Duree_s)
-        if self.ConvertirDuree(Duree_s)[0] >= 1 :
-            sHeures =self.ConvertirDuree(Duree_s)[0], " heures "
-            sMessage=sMessage+ str(sHeures[0])+ str(sHeures[1])
-            
-        if self.ConvertirDuree(Duree_s)[1] >= 1 :
-            sMinutes =self.ConvertirDuree(Duree_s)[1], " minutes "
-            sMessage=sMessage+ str(sMinutes[0])+ str(sMinutes[1])
+        if __name__ == "__main__" :
+            print ("\n \n \n json d'entree = ", jsonInput,"\n \n \n ")
 
-        if self.ConvertirDuree(Duree_s)[2] >= 1 :
-            sSecondes =self.ConvertirDuree(Duree_s)[2], " secondes "
-            sMessage=sMessage + str(sSecondes[0])+ str(sSecondes[1])
+        # Get duration
+        duration_s = 0
+        try:
+            # If Wit returned multiple durations
+            if type(jsonInput['outcome']['entities']['duration']) is list:
+                for element in jsonInput['outcome']['entities']['duration']:
+                    duration_s += int(element['value'])
+            # Only one duration
+            elif type(jsonInput['outcome']['entities']['duration']) is dict:
+                duration_s = int(jsonInput['outcome']['entities']['duration']['value'])
+            else:
+                # Unknown
+                raise
+        except:
+            pass
+        if duration_s <= 0:
+            return {'plugin': "Minuteur", 'method': "setMinuteur", 'body': self._("You didn't specify a duration")}
 
-        sMessage=sMessage + str(sObjet)
-        #print sMessage
-        return {"plugin": "Minuteur",
-                "method": "setRebours",
-                "body": (sMessage)
-        }
+        # Get zone and name
+        zone = jsonInput['zone']
+        name = ""
+        try:
+            name = str(jsonInput['outcome']['entities']['message_subject']['value'])
+        except:
+            pass
+
+        # Start timer
+        self._create(duration_s = duration_s, name = name, zone = zone)
+
+        # Create confirmation message
+        message = self._("I start a timer for %s") % (self.duration_to_str(duration_s))
+        if name != "":
+            message += " %s %s" % (self._("for"), name)
+        return {'plugin': "Minuteur", 'method': "setMinuteur", 'body': message}
+
+    def _create(self, duration_s, name, zone):
+        """
+        Create a new timer
+        """
+        # Add a new timer
+        self.Timers.append({'name': name, 'zone': zone})
+        self.Timers[-1]['timer'] = NeoTimer(duration_s = duration_s, user_cbk = self._timer_cbk, user_param = self.Timers[-1])
+
+    def _timer_cbk(self, timer):
+        """
+        Internal timer callback
+        """
+        # Notify user
+        sMessage = self._("The timer %s is over") % ("%s %s" % (self._("for"), timer['name']))
+        if __name__ == "__main__" :
+            print "Notify clients in zone %s : %s" % (timer['zone'], sMessage)
+        else:
+            NotifyClient(sMessage, timer['zone'])
+        
+        # Remove timer
+        self.Timers.remove(timer)
 
     def getMinuteur(self, jsonInput):
         """
-        recupere la duree restante du  compte à rebours
-        interroge le thread correspondant 
-        retourne l'info
+        Get left time on a timer
         """
-        try :
-            sObjet = str(jsonInput['outcome']['entities']['message_subject']['value'])
-            if "pour" not in sObjet :
-                sObjet = "pour " + sObjet #des fois il manque le pour dans l'objet, Wit ne le renvoit pas
-            sObjet= ' '.join(sObjet.split()) #suppression espace en trop
-        except :                            
-            sObjet = "timer-sans-objet" #non bloquant
+        
+        # Get name
+        name = ""
+        try:
+            name = str(jsonInput['outcome']['entities']['message_subject']['value'])
+        except:
+            pass
 
-        #print "recherche du dico =", sObjet
-        #for element in self.dicTimer :
-        #   print "element dico :",element
-        try :
-            Duree_s = Minuteur.dicTimer[sObjet].get_left_time_s()
-            Duree_s = int(Duree_s)  #suppression de toutes les decimales
-            #print Duree_s
-        except KeyError :
-            print "Pas d'entree dans le dico"
-            return {"plugin": "Minuteur",  #KO
-                    "method": "setRebours",
-                    "body": ("Je n'ai pas de minuteur avec ce nom.")
-                    }
+        # Search timer
+        for t in self.Timers:
+            if t['name'] == name:
+                # Create message
+                message = self._("There is %s left") % (self.duration_to_str(t['timer'].get_left_time_s()))
+                if name != "":
+                    message += " %s %s" % (self._("for"), name)
 
-        #construction du message de retour utilisateur
-        sMessage = "Il reste "
-        #conversion secondes vers minutes, heures pour l'utilisateurs
-        if self.ConvertirDuree(Duree_s)[0] >= 1 :
-            sHeures =self.ConvertirDuree(Duree_s)[0], " heures "
-            sMessage=sMessage+ str(sHeures[0])+ str(sHeures[1])
+                return {'plugin': "Minuteur", 'method': "getMinuteur", 'body': message}
+
+        return {'plugin': "Minuteur", 'method': "getMinuteur", 'body': self._("I don't know this timer") }
+
+    def ConvertDuration(self, duration_s):
+        """
+        Convert duration to hours, minutes, seconds
+        """
+        duration_s = int(duration_s)
+        ret = {}
+        ret['h'] = duration_s /3600
+        duration_s -= ret['h'] * 3600
+        ret['m'] = duration_s / 60
+        ret['s'] = duration_s - ret['m'] * 60
+        return ret
+
+    def duration_to_str(self, duration_s):
+        duration = self.ConvertDuration(duration_s)
+        msg = ""
+        if duration['h'] > 1:
+            msg += "%d %ss" % (duration['h'], self._("hour"))
+        elif duration['h'] > 0:
+            msg += "%d %s" % (duration['h'], self._("hour"))
+
+        if duration['m'] > 1:
+            msg += "%d %ss" % (duration['m'], self._("minute"))
+        elif duration['m'] > 0:
+            msg += "%d %s" % (duration['m'], self._("minute"))
+
+        if duration['s'] > 1:
+            msg += "%d %ss" % (duration['s'], self._("second"))
+        elif duration['s'] > 0:
+            msg += "%d %s" % (duration['s'], self._("second"))
             
-        if self.ConvertirDuree(Duree_s)[1] >= 1 :
-            sMinutes =self.ConvertirDuree(Duree_s)[1], " minutes "
-            sMessage=sMessage+ str(sMinutes[0])+ str(sMinutes[1])
-
-        if self.ConvertirDuree(Duree_s)[2] >= 1 :
-            sSecondes =self.ConvertirDuree(Duree_s)[2], " secondes "
-            sMessage=sMessage + str(sSecondes[0])+ str(sSecondes[1])
-
-        sMessage=sMessage + sObjet
-        print sMessage
-        return {"plugin": "Minuteur",
-                "method": "setRebours",
-                "body": (sMessage)
-        }
-
-    def monMinuteur(self,pDuree_s, psObject, psZone):
-        #creer un timer avec callback
-        def timer_cbk(pMessage):
-            #print "Fin du minuteur {} dans {}".format(pMessage[0], pMessage[1])
-            sMessage="Le compte a rebours ",pMessage[0], " est terminer"
-            NotifyClient(sMessage,pMessage[1])
-            #2eme couche de rappel
-            sleep(5) #attente de la fin de la notification precendente
-            sMessage="Je raipaite : le compte a rebours ",pMessage[0], " est terminer"  #raipaite car la synthese ne comprend pas répéte
-            NotifyClient(sMessage,pMessage[1])
-            #suppression du dico
-            del Minuteur.dicTimer[psObject]
-
-        monNouveauTimer = NeoTimer(pDuree_s, timer_cbk,(psObject,psZone))
-        
-        #ajout dans le dico
-        print "entree du dico =", psObject
-        Minuteur.dicTimer[psObject]=monNouveauTimer
-        
-        return()
-
-    def ConvertirDuree(self,pDuree):
-        """
-        conversion d'un temps en seconde -> en heures, minutes, secondes
-        """
-        heures=0
-        minutes=0
-        
-        heures = pDuree /3600
-        pDuree %= 3600
-        minutes = pDuree/60
-        pDuree%=60
-        return (heures,minutes,pDuree)
+        return msg
 
 
 #############################################################
 # Tests
 if __name__ == "__main__" :
     essai=Minuteur()
-    retourn = essai.setMinuteur(jsonInput2)
-    print (retourn['body'])
-    
+    ret = essai.setMinuteur(jsonInput2)
+    print ret['body']
+
     sleep(3)
-    essai.getMinuteur(jsonInputGetMinuteur)
-    
-    #print essai.ConvertirDuree(75)
-    #print essai.ConvertirDuree(75)[2]
+    ret = essai.getMinuteur(jsonInputGetMinuteur)
+    print ret['body']
