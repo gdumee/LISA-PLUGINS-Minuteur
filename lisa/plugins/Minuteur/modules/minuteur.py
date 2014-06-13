@@ -7,8 +7,7 @@
 ###################################
 #
 #Le plugin permet de lancer des minuteurs en arriere plan
-#Ces minuteurs sont simultanés et asynchrones : ils  ne bloque pas LISA
-#
+#Ces minuteurs sont simultanés et asynchrones : ils  ne bloquent pas LISA
 #
 #Les fonctions publiques sont getxxx, setxxxx
 #Les autres fonctions sont privées au module
@@ -28,7 +27,6 @@ import inspect
 import os
 from time import sleep
 from NeoTimer import NeoTimer
-import Notification
 from Notification import NotifyClient
 
 
@@ -115,7 +113,7 @@ class Minuteur(IPlugin):
         self._create(duration_s = duration_s, name = name, zone = zone)
 
         # Create confirmation message
-        message = self._("I start a timer for %s") % (self.duration_to_str(duration_s))
+        message = self._("I start a timer for %s") % (self._duration_to_str(duration_s))
         if name != "":
             message += " %s %s" % (self._("for"), name)
         return {'plugin': "Minuteur", 'method': "setMinuteur", 'body': message}
@@ -158,7 +156,7 @@ class Minuteur(IPlugin):
         for t in self.Timers:
             if t['name'] == name:
                 # Create message
-                message = self._("There is %s left") % (self.duration_to_str(t['timer'].get_left_time_s()))
+                message = self._("There is %s left") % (self._duration_to_str(t['timer'].get_left_time_s()))
                 if name != "":
                     message += " %s %s" % (self._("for"), name)
 
@@ -166,7 +164,7 @@ class Minuteur(IPlugin):
 
         return {'plugin': "Minuteur", 'method': "getMinuteur", 'body': self._("I don't know this timer") }
 
-    def ConvertDuration(self, duration_s):
+    def _convert_duration(self, duration_s):
         """
         Convert duration to hours, minutes, seconds
         """
@@ -178,8 +176,11 @@ class Minuteur(IPlugin):
         ret['s'] = duration_s - ret['m'] * 60
         return ret
 
-    def duration_to_str(self, duration_s):
-        duration = self.ConvertDuration(duration_s)
+    def _duration_to_str(self, duration_s):
+        """
+        Convert a duration to string "[x hours] [y minutes] [z seconds]"
+        """
+        duration = self._convert_duration(duration_s)
         msg = ""
         if duration['h'] > 1:
             msg += "%d %ss" % (duration['h'], self._("hour"))
