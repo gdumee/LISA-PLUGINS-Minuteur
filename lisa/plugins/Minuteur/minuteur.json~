@@ -1,5 +1,5 @@
 {
-    "name": "Minuteur",
+    "name": "minuteur",
     "version": "0.1",
     "author": "Guillaume Audet",
     "enabled": 1,
@@ -19,7 +19,7 @@
                 "method": "stopMinuteur",
                 "corpus": {}
             },
-            "minuteur_get": {
+            "minuteur_remaining": {
                 "method": "getMinuteur",
                 "corpus": {}
             }

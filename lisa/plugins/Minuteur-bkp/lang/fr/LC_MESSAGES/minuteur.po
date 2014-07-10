@@ -1,0 +1,48 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: 0.1\n"
+"Report-Msgid-Bugs-To: Guillaume\n"
+"POT-Creation-Date: 2014-05-13 17:24+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: Guillaume <mlml>\n"
+"Language-Team: FR <mlml>\n"
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../modules/minuteur.py
+msgid "You didn't specify a duration"
+msgstr "Vous n'avez pas indiqué de durée"
+
+#: ../../modules/minuteur.py
+msgid "I start a timer for %s"
+msgstr "je lance un minuteur de %s"
+
+#: ../../modules/minuteur.py
+msgid "for"
+msgstr "pour"
+
+#: ../../modules/minuteur.py
+msgid "There is %s left"
+msgstr "Il reste %s"
+
+#: ../../modules/minuteur.py
+msgid "I don't know this timer"
+msgstr "Je ne connais pas ce minuteur"
+
+#: ../../modules/minuteur.py
+msgid "The timer %s is over"
+msgstr "Le minuteur %s est terminé"
+
+#: ../../modules/minuteur.py
+msgid "hour"
+msgstr "heure"
+
+#: ../../modules/minuteur.py
+msgid "minute"
+msgstr "minute"
+
+#: ../../modules/minuteur.py
+msgid "second"
+msgstr "seconde"

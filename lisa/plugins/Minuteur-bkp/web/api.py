@@ -3,17 +3,18 @@ from django.conf.urls import patterns, url, include
 from tastypie import resources
 from tastypie.utils import trailing_slash
 import json
+from lisa.server.web.weblisa.settings import LISA_PATH
 
-class Minuteur(object):
+class minuteur(object):
     def __init__(self):
         return None
 
-class MinuteurResource(resources.Resource):
+class minuteurResource(resources.Resource):
     class Meta:
-        resource_name = 'Minuteur'
+        resource_name = 'minuteur'
         allowed_methods = ()
         authorization = authorization.Authorization()
-        object_class = Minuteur
+        object_class = minuteur
 
     def base_urls(self):
         return [

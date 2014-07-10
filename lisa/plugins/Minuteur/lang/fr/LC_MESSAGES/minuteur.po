@@ -13,36 +13,49 @@ msgstr ""
 
 #: ../../modules/minuteur.py
 msgid "You didn't specify a duration"
-msgstr "Vous n'avez pas indiqué de durée"
+msgstr "(10,\"Vous n'avez pas indiqué de durée.\"),"
+        "(10,\"Il manque la durée.\"),"
+        "(10,\"Veuillez précisez la durée du minuteur.\")"
 
-#: ../../modules/minuteur.py
-msgid "I start a timer for %s"
-msgstr "je lance un minuteur de %s"
 
-#: ../../modules/minuteur.py
+
+msgid "I start a timer for"
+msgstr "(5,\"je lance un minuteur de {0}\"),"
+"(10,\"je démarre un minuteur de {0}.\"),"
+"(10,\"je compte à rebours {0}.\"),"
+"(10,\"je chronomètre {0}.\")"
+
+
 msgid "for"
 msgstr "pour"
 
-#: ../../modules/minuteur.py
-msgid "There is %s left"
-msgstr "Il reste %s"
 
-#: ../../modules/minuteur.py
+msgid "There is remaining"
+msgstr "(10,\"Il reste {0}.\"),"
+"(10,\"Il reste encore {0}.\"),"
+"(5,\"Il y en a encore pour {0}.\")"
+
+msgid "existing timer"
+msgstr "Les minuteurs en cours sont {slist}"
+
 msgid "I don't know this timer"
 msgstr "Je ne connais pas ce minuteur"
 
-#: ../../modules/minuteur.py
-msgid "The timer %s is over"
-msgstr "Le minuteur %s est terminé"
 
-#: ../../modules/minuteur.py
+msgid "The timer is over"
+msgstr "Le minuteur {0} est terminé"
+
+msgid "I stop timer"
+msgstr "(10,\"J'ai arreté le minuteur {name}.\"),"
+"(10,'J'arrête le minuteur.\")"
+
+
+#---time
 msgid "hour"
 msgstr "heure"
 
-#: ../../modules/minuteur.py
 msgid "minute"
 msgstr "minute"
 
-#: ../../modules/minuteur.py
 msgid "second"
 msgstr "seconde"
