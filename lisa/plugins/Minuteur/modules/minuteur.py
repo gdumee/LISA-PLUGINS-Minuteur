@@ -47,9 +47,9 @@ class Minuteur(IPlugin):
         
         self.Timers = []
 
-#-----------------------------------------------------------------------------
-#              Publics  Fonctions
-#-----------------------------------------------------------------------------
+    #-----------------------------------------------------------------------------
+    #              Publics  Fonctions
+    #-----------------------------------------------------------------------------
     def setMinuteur(self, jsonInput):
         """
         Set a new timer
@@ -94,7 +94,7 @@ class Minuteur(IPlugin):
         
  
 
-#-----------------------------------------------------------------------------
+    #-----------------------------------------------------------------------------
     def getMinuteur(self, jsonInput):
         """
         Get all timer or remaining time on a timer
@@ -125,7 +125,7 @@ class Minuteur(IPlugin):
             return {'plugin': "Minuteur", 'method': "getMinuteur", 'body': message}
 
 
-#-----------------------------------------------------------------------------
+    #-----------------------------------------------------------------------------
     def stopMinuteur(self, jsonInput):
         """
         stop a timer
@@ -150,12 +150,12 @@ class Minuteur(IPlugin):
 
 
 
-#-----------------------------------------------------------------------------
-#              privates functions
-#-----------------------------------------------------------------------------
+    #-----------------------------------------------------------------------------
+    #              privates functions
+    #-----------------------------------------------------------------------------
 
        
-#-----------------------------------------------------------------------------
+    #-----------------------------------------------------------------------------
     def _create(self, duration_s, name, zone):
         """
         Create a new timer
@@ -165,7 +165,7 @@ class Minuteur(IPlugin):
         self.Timers[-1]['timer'] = NeoTimer(duration_s = duration_s, user_cbk = self._timer_cbk, user_param = self.Timers[-1])
 
 
-#-----------------------------------------------------------------------------
+    #-----------------------------------------------------------------------------
     def _timer_cbk(self, timer):
         """
         Internal timer callback
@@ -174,7 +174,7 @@ class Minuteur(IPlugin):
         if timer['name'] != "":
             sMessage = self._("The timer is over").format("%s %s" % (self._("for"), timer['name']))
         else:
-            sMessage = self._("The timer is over").format('')
+            sMessage = self._("The timer is over").format("")
         if __name__ == "__main__" :
             print "Notify clients in zone %s : %s" % (timer['zone'], sMessage)
         else:
@@ -184,7 +184,23 @@ class Minuteur(IPlugin):
         self.Timers.remove(timer)
         
         
-#-----------------------------------------------------------------------------
+    #-----------------------------------------------------------------------------
+    def _question_cbk(self, timer, answer):
+        if timer['name'] != "":
+            sMessage = self._("The timer is over").format("%s %s" % (self._("for"), timer['name']))
+        else:
+            sMessage = self._("The timer is over").format("")
+        if answer is None:
+            print "No answer"
+        else:
+            print "Answer : {0}".format(answer)
+
+        self.dialog.SimpleNotify(plugin = "Minuteur", method = "setMinuteur", message = sMessage, protocol = timer['protocol'])
+        
+        # Remove timer
+        self.Timers.remove(timer)
+        
+    #-----------------------------------------------------------------------------
     def _convert_duration(self, duration_s):
         """
         Convert duration to hours, minutes, seconds
@@ -194,7 +210,7 @@ class Minuteur(IPlugin):
         ret['h'], ret['m'] = divmod(ret['m'], 60)
         return ret
 
-#-----------------------------------------------------------------------------
+    #-----------------------------------------------------------------------------
     def _duration_to_str(self, duration_s):
         """
         Convert a duration to string "[x hours] [y minutes] [z seconds]"
