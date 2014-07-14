@@ -25,9 +25,9 @@ import inspect
 import os
 
 from time import sleep
-from lisa.Neotique.Neo import NeoTrad
+from lisa.Neotique.NeoTrans import NeoTrans
 from lisa.Neotique.NeoTimer import NeoTimer
-from lisa.Neotique.Notification import NotifyClient
+from lisa.Neotique.NeoDialog import NeoDialog
 
 
 
@@ -42,8 +42,7 @@ class Minuteur(IPlugin):
         super(Minuteur, self).__init__()
         self.configuration_plugin = self.mongo.lisa.plugins.find_one({"name": "Minuteur"})
         self.path = os.path.realpath(os.path.abspath(os.path.join(os.path.split(inspect.getfile(inspect.currentframe()))[0],os.path.normpath("../lang/"))))
-        self._ = translation = gettext.translation(domain='minuteur', localedir=self.path, fallback=True, languages=[self.configuration_lisa['lang']]).ugettext
-        self._ = NeoTrad(self._).Trad
+        self._ = NeoTrans(domain = 'minuteur', localedir = self.path, fallback = True, languages = [self.configuration_lisa['lang']]).Trans
         
         self.Timers = []
 
