@@ -3,8 +3,13 @@
     "version": "0.1",
     "author": "Guillaume Audet",
     "enabled": 1,
+<<<<<<< HEAD
     "pypi-url": "https://pipi.python.org/pypi/lisa-plugin-Minuteur",
     "github-url": "https://raw.githubusercontent.com/Guillaume/LISA-PLUGINS-Minuteur/master/lisa/plugins/Minuteur/minuteur.json",
+=======
+    "pypi-url": "https://pypi.python.org/pypi/lisa-plugin-Minuteur",
+    "github-url": "https://githubusercontent.com/Guillaume/LISA-PLUGINS-Minuteur/master/lisa/plugins/Minuteur/minuteur.json",
+>>>>>>> d2545aab3fcdcf9f341e9f7f90bd1d80d99a1761
     "description": [
         {"lang": "fr", "description": "Ce plugin gère des minuteurs et compte à rebours"}
     ],
