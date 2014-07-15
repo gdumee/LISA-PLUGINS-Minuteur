@@ -13,42 +13,37 @@ msgstr ""
 
 #: ../../modules/minuteur.py
 msgid "You didn't specify a duration"
-msgstr "(10,\"Vous n'avez pas indiqué de durée.\"),"
-        "(10,\"Il manque la durée.\"),"
-        "(10,\"Veuillez précisez la durée du minuteur.\")"
-
-
+msgstr  "(10, \"Vous n'avez pas indiqué de durée\"),"
+        "(10, \"Il manque la durée\"),"
+        "(10, \"Veuillez précisez la durée du minuteur\")"
 
 msgid "I start a timer for"
-msgstr "(5,\"je lance un minuteur de {0}\"),"
-"(10,\"je démarre un minuteur de {0}.\"),"
-"(10,\"je compte à rebours {0}.\"),"
-"(10,\"je chronomètre {0}.\")"
-
+msgstr  "(5,  \"je lance un minuteur de {0}\"),"
+        "(10, \"je démarre un minuteur de {0}\"),"
+        "(10, \"je compte à rebours {0}\"),"
+        "(10, \"je chronomètre {0}\")"
 
 msgid "for"
 msgstr "pour"
 
-
 msgid "There is remaining"
-msgstr "(10,\"Il reste {0}.\"),"
-"(10,\"Il reste encore {0}.\"),"
-"(5,\"Il y en a encore pour {0}.\")"
+msgstr  "(10, \"Il reste {0}\"),"
+        "(10, \"Il reste encore {0}\"),"
+        "(5,  \"Il y en a encore pour {0}\")"
 
 msgid "existing timer"
-msgstr "Les minuteurs en cours sont {slist}"
+msgstr  "Les minuteurs en cours sont {slist}"
 
 msgid "I don't know this timer"
-msgstr "Je ne connais pas ce minuteur"
+msgstr  "Je ne connais pas ce minuteur"
 
 
 msgid "The timer is over"
-msgstr "Le minuteur {0} est terminé"
+msgstr  "Le minuteur {0} est terminé"
 
 msgid "I stop timer"
-msgstr "(10,\"J'ai arreté le minuteur {name}.\"),"
-"(10,'J'arrête le minuteur.\")"
-
+msgstr  "(10, \"J'ai arreté le minuteur {name}\"),"
+        "(10, \"J'arrête le minuteur\")"
 
 #---time
 msgid "hour"
