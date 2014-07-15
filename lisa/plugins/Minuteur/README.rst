@@ -1,3 +1,8 @@
 LISA Minuteur plugin
 ======
-This module is automatically generated. Please fill this file with all the docs you can.
+Manage timers for users application (cooking...)
+
+
+TODO
+=======
+ajouter une fonctionne chronométre

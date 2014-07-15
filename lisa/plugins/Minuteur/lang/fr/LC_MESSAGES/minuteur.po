@@ -32,10 +32,15 @@ msgstr  "(10, \"Il reste {0}\"),"
         "(5,  \"Il y en a encore pour {0}\")"
 
 msgid "existing timer"
-msgstr  "Les minuteurs en cours sont {slist}"
+msgstr  "(10,\"Le minuteur en cours est {slist}.\"),"
+"(10,\"Le minuteur actif est {slist}.\"),"
+
+msgid "existing timers"
+msgstr  "(10,\"Les minuteurs en cours sont {slist}.\"),"
+"(10,\"Les minuteurs actifs sont {slist}.\"),"
 
 msgid "I don't know this timer"
-msgstr  "Je ne connais pas ce minuteur"
+msgstr  "Je ne connais pas ce minuteur."
 
 
 msgid "The timer is over"
