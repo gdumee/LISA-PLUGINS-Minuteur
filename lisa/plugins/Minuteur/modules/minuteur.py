@@ -32,8 +32,6 @@ class Minuteur(IPlugin):
     """
     Plugin main class
     """
-    Timers = []  #class variable
-    
     def __init__(self):
         super(Minuteur, self).__init__()
         self.configuration_plugin = self.mongo.lisa.plugins.find_one({"name": "Minuteur"})
@@ -46,38 +44,38 @@ class Minuteur(IPlugin):
         Set a new timer
         """
         # Tests
-        if __name__ == "__main__": 
+        if __name__ == "__main__":
             print ("\n \n \n json d'entree = ", jsonInput,"\n \n \n ")
 
         # Get context
         context = jsonInput['context']
 
         # Get timer name
-        name = context.getClientVar('new_minuteur_name', default = "")
+        context.createClientVar(name = 'minuteur_name', default = "")
         try:
-            name = str(jsonInput['outcome']['entities']['message_subject']['value'])
+            context.minuteur_name = jsonInput['outcome']['entities']['message_subject']['value']
         except:
             pass
 
         # Get duration
-        duration_s = context.getClientVar('new_minuteur_duration', default = 0)
+        context.createClientVar(name = 'minuteur_duration', default = 0)
         try:
             # If Wit returned multiple durations
             if type(jsonInput['outcome']['entities']['duration']) is list:
                 for element in jsonInput['outcome']['entities']['duration']:
-                    duration_s += int(element['value'])
+                    context.minuteur_duration += int(element['value'])
             # Only one duration
             elif type(jsonInput['outcome']['entities']['duration']) is dict:
-                duration_s = int(jsonInput['outcome']['entities']['duration']['value'])
+                context.minuteur_duration = int(jsonInput['outcome']['entities']['duration']['value'])
         except:
             pass
 
         # Check duration
-        if duration_s <= 0:
+        if context.minuteur_duration <= 0:
             message = self._("no_duration")
 
             # Tests
-            if __name__ == "__main__": 
+            if __name__ == "__main__":
                 return {'body': message}
 
             # Ask for duration
@@ -85,18 +83,18 @@ class Minuteur(IPlugin):
             return
 
         # Start timer
-        self._create(duration_s = duration_s, name = name, context = context)
+        self._create(duration_s = context.minuteur_duration, name = context.minuteur_name, context = context)
 
         # Create confirmation message
-        message = self._('start_timer').format(duration = self._duration_to_str(duration_s), name = self._name_str(name))
+        message = self._('start_timer').format(duration = self._duration_to_str(context.minuteur_duration), name = self._name_str(context.minuteur_name))
 
         # Tests
-        if __name__ == "__main__": 
+        if __name__ == "__main__":
             return {'body':message}
 
         # Clear context vars
-        duration_s = 0
-        name = ""
+        context.minuteur_duration = 0
+        context.minuteur_name = ""
 
         # Return result to client
         self.speakToClient(context = jsonInput['context'], text = message)
@@ -108,12 +106,12 @@ class Minuteur(IPlugin):
         """
         # Get context
         context = jsonInput['context']
-        Timers = context.getGlobalvar('Timers', default = {})
+        context.createGlobalVar(name = 'minuteur_timers', default = {})
 
         # No active timer
-        if len(Timers) == 0:
+        if len(context.minuteur_timers) == 0:
             message += self._("no_timer")
-            
+
             # Answer client
             self.speakToClient(context = context, text = message)
             return
@@ -124,29 +122,29 @@ class Minuteur(IPlugin):
             name = str(jsonInput['outcome']['entities']['message_subject']['value'])
         except:
             # When only one timer, select it by default
-            if len(Timers) == 1:
-                name = Timers[Timers.keys()[0]]['name']
+            if len(context.minuteur_timers) == 1:
+                name = context.minuteur_timers[context.minuteur_timers.keys()[0]]['name']
             else:
                 name = ""
 
         # If there is a name
         if name != "":
             # Search named timer
-            for uid in Timers:
-                if Timers[uid]['name'] == name:
+            for uid in context.minuteur_timers:
+                if context.minuteur_timers[uid]['name'] == name:
                     # Create message
-                    message = self._("left_time").format(duration = self._duration_to_str(Timers[uid]['timer'].get_left_time_s()), name = self._name_str(name))
+                    message = self._("left_time").format(duration = self._duration_to_str(context.minuteur_timers[uid]['timer'].get_left_time_s()), name = self._name_str(name))
 
-                    if __name__ == "__main__": 
+                    if __name__ == "__main__":
                         return {'body': message}
 
                     # Answer client
                     self.speakToClient(context = context, text = message)
                     return
-        
+
         # No timer found
-        self._getMinuteurList(context, Timers)
-        
+        self._getMinuteurList(context, context.minuteur_timers)
+
     #-----------------------------------------------------------------------------
     def stopMinuteur(self, jsonInput):
         """
@@ -154,12 +152,12 @@ class Minuteur(IPlugin):
         """
         # Get context
         context = jsonInput['context']
-        Timers = context.getGlobalvar('Timers', default = {})
+        context.createGlobalVar(name = 'minuteur_timers', default = {})
 
         # No active timer
-        if len(Timers) == 0:
+        if len(context.minuteur_timers) == 0:
             message += self._("no_timer")
-            
+
             # Answer client
             self.speakToClient(context = context, text = message)
             return
@@ -170,21 +168,22 @@ class Minuteur(IPlugin):
             name = str(jsonInput['outcome']['entities']['message_subject']['value'])
         except:
             # When only one timer, select it by default
-            if len(Timers) == 1:
-                name = Timers[Timers.keys()[0]]['name']
+            if len(context.minuteur_timers) == 1:
+                name = context.minuteur_timers[context.minuteur_timers.keys()[0]]['name']
             else:
                 name = ""
 
         # If there is a name
         if name != "":
             # Search named timer
-            for uid in Timers:
-                if Timers[uid]['name'] == name:
+            for uid in context.minuteur_timers:
+                if context.minuteur_timers[uid]['name'] == name:
                     # Stop Timer
-                    Timers[uid]['timer'].stop()
+                    context.minuteur_timers[uid]['timer'].stop()
                     message = self._("stop_timer").format(name = self._name_str(timer['name']))
-            
-                    if __name__ == "__main__": 
+                    context.minuteur_timers.pop(uid)
+
+                    if __name__ == "__main__":
                         return {'body': message}
 
                     # Answer client
@@ -192,7 +191,7 @@ class Minuteur(IPlugin):
                     return
 
         # No timer found
-        self._getMinuteurList(context, Timers)
+        self._getMinuteurList(context, context.minuteur_timers)
 
     #-----------------------------------------------------------------------------
     def _getMinuteurList(self, context, Timers):
@@ -206,8 +205,8 @@ class Minuteur(IPlugin):
 
         for uid in Timers:
             message += ', ' + str(Timers[uid]['name'])
-        
-        if __name__ == "__main__": 
+
+        if __name__ == "__main__":
             return {'body': message}
 
         # Answer client
@@ -219,27 +218,29 @@ class Minuteur(IPlugin):
         Create a new timer
         """
         # Get context
-        Timers = context.getGlobalvar('Timers', default = {})
+        context.createGlobalVar(name = 'minuteur_timers', default = {})
 
         # Add a new timer
         uid = str(uuid.uuid1())
-        Timers[uid] = {'uid': uid, 'name': name, 'context': context}
-        Timers[uid]['timer'] = NeoTimer(duration_s = duration_s, user_cbk = self._timeout_cbk, user_param = Timers[uid])
-        
+        context.minuteur_timers[uid] = {'uid': uid, 'name': name}
+        context.minuteur_timers[uid]['timer'] = NeoTimer(duration_s = duration_s, user_cbk = self._timeout_cbk, user_param = {'context': context, 'uid': uid})
+
     #-----------------------------------------------------------------------------
-    def _timeout_cbk(self, timer):
+    def _timeout_cbk(self, params):
         """
         Internal timer callback
         """
         # Get context
-        context = timer['context']
-        Timers = context.getGlobalvar('Timers', default = {})
+        context = params['context']
+        uid = params['uid']
+        context.createGlobalVar(name = 'minuteur_timers', default = {})
+        timer = context.minuteur_timers[uid]
 
         # Notify user
         sMessage = self._("timer_over").format(name = self._name_str(timer['name']))
 
         # Remove timer
-        Timers.pop(timer['uid'])
+        context.minuteur_timers.pop(timer['uid'])
 
         # Tests
         if __name__ == "__main__":
@@ -251,10 +252,8 @@ class Minuteur(IPlugin):
     def _question_cbk(self, context, jsonAnswer):
         if jsonAnswer is None:
             # Reset values
-            name = context.getClientVar('new_minuteur_name', default = "")
-            name = ""
-            duration_s = context.getClientVar('new_minuteur_duration', default = 0)
-            duration_s = 0
+            context.minuteur_duration = 0
+            context.minuteur_name = ""
             return
 
         # Retry
@@ -298,7 +297,7 @@ class Minuteur(IPlugin):
     def _name_str(self, name):
         if name == "":
             return ""
-        return "{} {}".format(self._("for"), timer['name'])
+        return "{} ".format(self._("for")) + name
 
 
 #-----------------------------------------------------------------------------
@@ -340,7 +339,7 @@ if __name__ == "__main__":
     ret = essai.setMinuteur(jsonInput2)
     print ret['body']
 
-    
+
     sleep(3)
     essai = Minuteur()
     ret = essai.getMinuteur(jsonInputGetallMinuteur)
