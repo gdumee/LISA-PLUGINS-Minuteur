@@ -79,7 +79,7 @@ class Minuteur(IPlugin):
                 return {'body': message}
 
             # Ask for duration
-            self.askClient(context = context, text = message, wit_context = {'state': "minuteur"}, answer_cbk = self._question_cbk)
+            self.askClient(context = context, text = message, wit_context = {'state': "ask_duration"}, answer_cbk = self._question_cbk)
             return
 
         # Start timer
