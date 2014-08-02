@@ -33,10 +33,13 @@ class Minuteur(IPlugin):
     #-----------------------------------------------------------------------------
     def __init__(self):
         super(Minuteur, self).__init__(plugin_name = "Minuteur")
-        # TODO reload Timers from save conf
 
     #-----------------------------------------------------------------------------
     def __del__(self):
+        self.clean()
+
+    #-----------------------------------------------------------------------------
+    def clean(self):
         # Stop active timers
         for t in self._ActiveTimers:
             self._ActiveTimers[t].stop()
