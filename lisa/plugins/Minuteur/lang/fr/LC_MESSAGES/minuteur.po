@@ -1,6 +1,5 @@
 msgid ""
-msgstr ""
-        "Project-Id-Version: 0.1\n"
+msgstr  "Project-Id-Version: 0.1\n"
         "Report-Msgid-Bugs-To: Guillaume\n"
         "POT-Creation-Date: 2014-05-13 17:24+0000\n"
         "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
@@ -11,7 +10,20 @@ msgstr ""
         "Content-Type: text/plain; charset=UTF-8\n"
         "Content-Transfer-Encoding: 8bit\n"
 
-#: ../../modules/minuteur.py
+msgid "i_can_plugin"
+msgstr  "(10, \"Je peux gérer des minuteurs\"),"
+        "(10, \"Je peux faire des minuteurs\"),"
+
+msgid "i_can_setTimer"
+msgstr  "(10, \"Je peux démarrer des minuteurs\"),"
+
+msgid "i_can_stopTimer"
+msgstr  "(10, \"Je peux arrêter un minuteur\"),"
+
+msgid "i_can_getTimer"
+msgstr  "(10, \"Je peux vous donner le temps restant\"),"
+
+
 msgid "no_duration"
 msgstr  "(10, \"Vous n'avez pas indiqué de durée. Je vous écoute\"),"
         "(10, \"Bien sûr, un minuteur de quelle durée ?\"),"
@@ -56,7 +68,7 @@ msgstr  "(10, \"Le minuteur {name} est terminé\"),"
         "(10, \"Le minuteur {name} est fini\"),"
         "(10, \"Excusez moi, le minuteur {name} est terminé\"),"
         "(10, \"Excusez moi, le minuteur {name} est fini\"),"
-        
+
 msgid "stop_timer"
 msgstr  "(10, \"J'ai arreté le minuteur {name}\"),"
         "(10, \"Le minuteur {name} a été arrêté\"),"
@@ -70,6 +82,13 @@ msgstr  "(10, \"Je n'ai pas de minuteur en cours\"),"
         "(10, \"Je n'ai aucun minuteur\"),"
         "(10, \"Vous n'avez aucun minuteur actif\"),"
         "(10, \"Il n'y a aucun minuteur actif\"),"
+
+msgid "ended_timer"
+msgstr  "(10, \"Le miniteur {name} est terminé\"),"
+        "(10, \"Le miniteur {name} est déjà terminé\"),"
+        "(10, \"Ce miniteur est déjà terminé\"),"
+        "(10, \"Ce miniteur est terminé\"),"
+        "(2,  \"Ce miniteur n'est plus en cours\"),"
 
 #---time units
 msgid "hour"
