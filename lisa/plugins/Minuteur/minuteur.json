@@ -1,33 +1,32 @@
 {
     "name": "Minuteur",
     "version": "0.1",
+    "git-url": "git@git.neotique.fr:demonstrateur/plugin-minuteur",
     "author": "Guillaume Audet",
-    "enabled": 1,
-<<<<<<< HEAD
-    "pypi-url": "https://pipi.python.org/pypi/lisa-plugin-Minuteur",
-    "github-url": "https://raw.githubusercontent.com/Guillaume/LISA-PLUGINS-Minuteur/master/lisa/plugins/Minuteur/minuteur.json",
-=======
-    "pypi-url": "https://pypi.python.org/pypi/lisa-plugin-Minuteur",
-    "github-url": "https://githubusercontent.com/Guillaume/LISA-PLUGINS-Minuteur/master/lisa/plugins/Minuteur/minuteur.json",
->>>>>>> d2545aab3fcdcf9f341e9f7f90bd1d80d99a1761
-    "description": [
-        {"lang": "fr", "description": "Ce plugin gère des minuteurs et compte à rebours"}
-    ],
-    "lang": ["fr"],
-    "configuration": {
-        "intents": {
-            "minuteur_set": {
-                "method": "setMinuteur",
-                "corpus": {}
-            },
-           "minuteur_stop": {
-                "method": "stopMinuteur",
-                "corpus": {}
-            },
-            "minuteur_get": {
-                "method": "getMinuteur",
-                "corpus": {}
-            }
+    "i_can": "i_can_plugin",
+    "intents": {
+        "minuteur_set": {
+            "method": "setTimer",
+            "i_can": "i_can_setTimer"
+        },
+        "minuteur_stop": {
+            "method": "stopTimer",
+            "i_can": "i_can_stopTimer"
+        },
+        "minuteur_get": {
+            "method": "getTimer",
+            "i_can": "i_can_getTimer"
+        }
+    },
+    "crons": {
+    },
+    "context": {
+        "global": {
+            "minuteur_timers": {}
+        },
+        "client": {
+            "minuteur_name": "",
+            "minuteur_duration": 0
         }
     }
 }

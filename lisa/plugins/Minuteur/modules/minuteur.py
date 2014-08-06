@@ -9,20 +9,15 @@
 # copyright   : Neotique
 #-----------------------------------------------------------------------------
 
-# TODO :
-# stocker les timer dans un fichier pour y acceder pour apres un crash serveur par exemple
-
 
 #-----------------------------------------------------------------------------
 # Imports
 #-----------------------------------------------------------------------------
+import uuid
+from time import time
 from lisa.server.plugins.IPlugin import IPlugin
-import gettext
-import inspect
-import os, sys, uuid
-from time import sleep
-from lisa.Neotique.NeoTrans import NeoTrans
 from lisa.Neotique.NeoTimer import NeoTimer
+from lisa.Neotique.NeoConv import NeoConv
 
 
 #-----------------------------------------------------------------------------
@@ -32,33 +27,39 @@ class Minuteur(IPlugin):
     """
     Plugin main class
     """
-    def __init__(self):
-        super(Minuteur, self).__init__()
-        self.configuration_plugin = self.mongo.lisa.plugins.find_one({"name": "Minuteur"})
-        self.path = os.path.realpath(os.path.abspath(os.path.join(os.path.split(inspect.getfile(inspect.currentframe()))[0],os.path.normpath("../lang/"))))
-        self._ = NeoTrans(domain = 'minuteur', localedir = self.path, fallback = True, languages = [self.configuration_lisa['lang']]).Trans
+    # NeoTimers
+    _ActiveTimers = {}
 
     #-----------------------------------------------------------------------------
-    def setMinuteur(self, jsonInput):
+    def __init__(self):
+        super(Minuteur, self).__init__(plugin_name = "Minuteur")
+
+    #-----------------------------------------------------------------------------
+    def __del__(self):
+        self.clean()
+
+    #-----------------------------------------------------------------------------
+    def clean(self):
+        # Stop active timers
+        for t in self._ActiveTimers:
+            self._ActiveTimers[t].stop()
+        self._ActiveTimers = {}
+
+    #-----------------------------------------------------------------------------
+    def setTimer(self, jsonInput):
         """
         Set a new timer
         """
-        # Tests
-        if __name__ == "__main__":
-            print ("\n \n \n json d'entree = ", jsonInput,"\n \n \n ")
-
         # Get context
         context = jsonInput['context']
 
         # Get timer name
-        context.createClientVar(name = 'minuteur_name', default = "")
         try:
             context.minuteur_name = jsonInput['outcome']['entities']['message_subject']['value']
         except:
             pass
 
         # Get duration
-        context.createClientVar(name = 'minuteur_duration', default = 0)
         try:
             # If Wit returned multiple durations
             if type(jsonInput['outcome']['entities']['duration']) is list:
@@ -74,10 +75,6 @@ class Minuteur(IPlugin):
         if context.minuteur_duration <= 0:
             message = self._("no_duration")
 
-            # Tests
-            if __name__ == "__main__":
-                return {'body': message}
-
             # Ask for duration
             self.askClient(context = context, text = message, wit_context = {'state': "ask_duration"}, answer_cbk = self._question_cbk)
             return
@@ -88,10 +85,6 @@ class Minuteur(IPlugin):
         # Create confirmation message
         message = self._('start_timer').format(duration = self._duration_to_str(context.minuteur_duration), name = self._name_str(context.minuteur_name))
 
-        # Tests
-        if __name__ == "__main__":
-            return {'body':message}
-
         # Clear context vars
         context.minuteur_duration = 0
         context.minuteur_name = ""
@@ -100,114 +93,98 @@ class Minuteur(IPlugin):
         self.speakToClient(context = jsonInput['context'], text = message)
 
     #-----------------------------------------------------------------------------
-    def getMinuteur(self, jsonInput):
+    def getTimer(self, jsonInput):
         """
         Get all timer or remaining time on a timer
         """
         # Get context
         context = jsonInput['context']
-        context.createGlobalVar(name = 'minuteur_timers', default = {})
-
-        # No active timer
-        if len(context.minuteur_timers) == 0:
-            message += self._("no_timer")
-
-            # Answer client
-            self.speakToClient(context = context, text = message)
-            return
 
         # Get name
         name = ""
         try:
             name = str(jsonInput['outcome']['entities']['message_subject']['value'])
         except:
-            # When only one timer, select it by default
-            if len(context.minuteur_timers) == 1:
-                name = context.minuteur_timers[context.minuteur_timers.keys()[0]]['name']
+            pass
+
+        # Get timer
+        timer = self._getTimer(context = context, name = name)
+        if timer is not None:
+            # Create message
+            if timer['active'] == False:
+                message = self._("ended_timer").format(name = self._name_str(name))
             else:
-                name = ""
+                message = self._("left_time").format(duration = self._duration_to_str(timer['end'] - time()), name = self._name_str(name))
 
-        # If there is a name
-        if name != "":
-            # Search named timer
-            for uid in context.minuteur_timers:
-                if context.minuteur_timers[uid]['name'] == name:
-                    # Create message
-                    message = self._("left_time").format(duration = self._duration_to_str(context.minuteur_timers[uid]['timer'].get_left_time_s()), name = self._name_str(name))
+            # Answer client
+            self.speakToClient(context = context, text = message)
+            return
 
-                    if __name__ == "__main__":
-                        return {'body': message}
-
-                    # Answer client
-                    self.speakToClient(context = context, text = message)
-                    return
-
-        # No timer found
-        self._getMinuteurList(context, context.minuteur_timers)
+        # No timer found, return list
+        self._getTimerList(context)
 
     #-----------------------------------------------------------------------------
-    def stopMinuteur(self, jsonInput):
+    def stopTimer(self, jsonInput):
         """
         stop a timer
         """
         # Get context
         context = jsonInput['context']
-        context.createGlobalVar(name = 'minuteur_timers', default = {})
-
-        # No active timer
-        if len(context.minuteur_timers) == 0:
-            message += self._("no_timer")
-
-            # Answer client
-            self.speakToClient(context = context, text = message)
-            return
 
         # Get name
         name = ""
         try:
             name = str(jsonInput['outcome']['entities']['message_subject']['value'])
         except:
-            # When only one timer, select it by default
-            if len(context.minuteur_timers) == 1:
-                name = context.minuteur_timers[context.minuteur_timers.keys()[0]]['name']
+            pass
+
+        # Get timer
+        timer = self._getTimer(context = context, name = name)
+        if timer is not None:
+            # Create message
+            if timer['active'] == False:
+                message = self._("ended_timer").format(name = self._name_str(name))
             else:
-                name = ""
+                # Stop Timer
+                Minuteur._ActiveTimers[timer['uid']].stop()
+                Minuteur._ActiveTimers.pop(timer['uid'])
+                timer['active'] = False
+                message = self._("stop_timer").format(name = self._name_str(timer['name']))
 
-        # If there is a name
-        if name != "":
-            # Search named timer
-            for uid in context.minuteur_timers:
-                if context.minuteur_timers[uid]['name'] == name:
-                    # Stop Timer
-                    context.minuteur_timers[uid]['timer'].stop()
-                    message = self._("stop_timer").format(name = self._name_str(timer['name']))
-                    context.minuteur_timers.pop(uid)
+            # Answer client
+            self.speakToClient(context = context, text = message)
+            return
 
-                    if __name__ == "__main__":
-                        return {'body': message}
-
-                    # Answer client
-                    self.speakToClient(context = context, text = message)
-                    return
-
-        # No timer found
-        self._getMinuteurList(context, context.minuteur_timers)
+        # No timer found, return list
+        self._getTimerList(context)
 
     #-----------------------------------------------------------------------------
-    def _getMinuteurList(self, context, Timers):
-        # No timer found, return timer list
-        message = self._("unknown_timer") + ". "
+    def _getTimer(self, context, name):
+        # If there is a name
+        if name == "":
+            # When only one timer, select it by default
+            if len(context.minuteur_timers) == 1:
+                return context.minuteur_timers[context.minuteur_timers.keys()[0]]
 
-        if len(Timers) == 0:
+        # Search named timer
+        for uid in context.minuteur_timers:
+            if NeoConv.compareSimilar(context.minuteur_timers[uid]['name'], name) == True:
+                return context.minuteur_timers[uid]
+
+        # Not found
+        return None
+
+    #-----------------------------------------------------------------------------
+    def _getTimerList(self, context):
+        # No active timer
+        if len(Minuteur._ActiveTimers) == 0:
             message += self._("no_timer")
         else:
-            message += self._("timer_list")
-
-        for uid in Timers:
-            message += ', ' + str(Timers[uid]['name'])
-
-        if __name__ == "__main__":
-            return {'body': message}
+            # No timer found, return timer list
+            message = self._("unknown_timer") + ". " + self._("timer_list")
+            for uid in context.minuteur_timers:
+                if context.minuteur_timers[uid]['active'] == True:
+                    message += ', ' + str(context.minuteur_timers[uid]['name'])
 
         # Answer client
         self.speakToClient(context = context, text = message)
@@ -217,13 +194,14 @@ class Minuteur(IPlugin):
         """
         Create a new timer
         """
-        # Get context
-        context.createGlobalVar(name = 'minuteur_timers', default = {})
-
         # Add a new timer
         uid = str(uuid.uuid1())
-        context.minuteur_timers[uid] = {'uid': uid, 'name': name}
-        context.minuteur_timers[uid]['timer'] = NeoTimer(duration_s = duration_s, user_cbk = self._timeout_cbk, user_param = {'context': context, 'uid': uid})
+        context.minuteur_timers[uid] = {'uid': uid}
+        context.minuteur_timers[uid]['name'] = name
+        context.minuteur_timers[uid]['start'] = time()
+        context.minuteur_timers[uid]['end'] = time() + duration_s
+        context.minuteur_timers[uid]['active'] = True
+        Minuteur._ActiveTimers[uid] = NeoTimer(duration_s = duration_s, user_cbk = self._timeout_cbk, user_param = {'context': context, 'uid': uid})
 
     #-----------------------------------------------------------------------------
     def _timeout_cbk(self, params):
@@ -233,19 +211,16 @@ class Minuteur(IPlugin):
         # Get context
         context = params['context']
         uid = params['uid']
-        context.createGlobalVar(name = 'minuteur_timers', default = {})
         timer = context.minuteur_timers[uid]
 
         # Notify user
         sMessage = self._("timer_over").format(name = self._name_str(timer['name']))
 
         # Remove timer
-        context.minuteur_timers.pop(timer['uid'])
+        timer['active'] = False
+        Minuteur._ActiveTimers.pop(timer['uid'])
 
-        # Tests
-        if __name__ == "__main__":
-            return {'body': sMessage}
-
+        # Send message to client
         self.speakToClient(context = context, text = sMessage)
 
     #-----------------------------------------------------------------------------
@@ -257,7 +232,7 @@ class Minuteur(IPlugin):
             return
 
         # Retry
-        self.setMinuteur(jsonAnswer)
+        self.setTimer(jsonAnswer)
 
     #-----------------------------------------------------------------------------
     def _convert_duration(self, duration_s):
@@ -298,53 +273,5 @@ class Minuteur(IPlugin):
         if name == "":
             return ""
         return "{} ".format(self._("for")) + name
-
-
-#-----------------------------------------------------------------------------
-# Tests
-#-----------------------------------------------------------------------------
-if __name__ == "__main__":
-    jsonInput2 = {'from': u'Lisa-Web', 'zone': u'WebSocket',u'msg_id': u'd31f4acd-9ed0-4248-9344-b2b29b95982c',
-        u'lisaprotocol': '<lisa.server.libs.server.Lisa instance at 0x7ffdcaea33b0>',
-        u'msg_body': u'compte \xe0 rebours 20 secondes pour le poisson',
-        u'outcome': {u'entities': {
-        u'duration': {u'body': u'3 minutes', u'start': 17, u'end': 28, u'value': 180},
-        u'message_subject': {u'body': u'pour le poisson', u'start': 29, u'end': 44, u'suggested': True, u'value': u'le jambon'}
-        },u'confidence': 0.7,
-        u'intent': u'minuteur_rebours'}, 'type': u'chat'}
-
-    jsonInput3 = {'from': u'Lisa-Web', 'zone': u'WebSocket',u'msg_id': u'd31f4acd-9ed0-4248-9344-b2b29b95982c',
-        u'lisaprotocol': '<lisa.server.libs.server.Lisa instance at 0x7ffdcaea33b0>',
-        u'msg_body': u'compte \xe0 rebours 20 secondes pour le poisson',
-        u'outcome': {u'entities': {
-        u'duration': {u'body': u'3 minutes', u'start': 17, u'end': 28, u'value': 180},
-        u'message_subject': {u'body': u'pour le poisson', u'start': 29, u'end': 44, u'suggested': True, u'value': u'le rat'}
-        },u'confidence': 0.7,
-        u'intent': u'minuteur_rebours'}, 'type': u'chat'}
-
-    jsonInputGetallMinuteur = {'from': u'Lisa-Web', 'zone': u'WebSocket',u'msg_id': u'd31f4acd-9ed0-4248-9344-b2b29b95982c',
-        u'lisaprotocol': '<lisa.server.libs.server.Lisa instance at 0x7ffdcaea33b0>',
-        u'msg_body': u'combien de temps reste-t-il pour le lapin',
-        u'outcome': {u'entities': {  },
-        u'confidence': 0.949, u'intent': u'minuteur_tempsrestant'}, 'type': u'chat'}
-
-    jsonInputGetMinuteur = {'from': u'Lisa-Web', 'zone': u'WebSocket',u'msg_id': u'd31f4acd-9ed0-4248-9344-b2b29b95982c',
-        u'lisaprotocol': '<lisa.server.libs.server.Lisa instance at 0x7ffdcaea33b0>',
-        u'msg_body': u'combien de temps reste-t-il pour le lapin',
-        u'outcome': {u'entities': {
-        u'message_subject': {u'body': u'le lapin', u'start': 33, u'end': 41, u'suggested': True, u'value': u'le poisson'}
-        }, u'confidence': 0.949, u'intent': u'minuteur_tempsrestant'}, 'type': u'chat'}
-
-    essai = Minuteur()
-    ret = essai.setMinuteur(jsonInput2)
-    print ret['body']
-
-
-    sleep(3)
-    essai = Minuteur()
-    ret = essai.getMinuteur(jsonInputGetallMinuteur)
-    print ret['body']
-    ret = essai.getMinuteur(jsonInputGetMinuteur)
-    print ret['body']
 
 # --------------------- End of minuteur.py  ---------------------
